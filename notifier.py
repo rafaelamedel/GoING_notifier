@@ -11,8 +11,8 @@ def enviar_correo(nuevas_reservas):
     # --- TUS CREDENCIALES ---
     email_origen = os.environ.get("GMAIL_SENDER")
     # Recuerda: Esta es la "Contraseña de aplicación" de 16 letras de Google, NO tu clave normal
-    password =  os.environ.get("CLAVE_GMAL")
-    email_destino = os.environ.get("CORREO_UC") # Te lo envías a ti mismo
+    password =  os.environ.get("CLAVE_GMAIL")
+    email_destino = os.environ.get("CORREO_UC")  # Te lo envías a ti mismo
     
     # --- ARMANDO EL CORREO ---
     msg = EmailMessage()
