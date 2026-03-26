@@ -31,42 +31,51 @@ def login(user: str, password: str):
     return driver
 
 
-def extraer_reservas(driver: webdriver):
+def extraer_reservas(driver: webdriver, semanas_a_revisar: int = 2):
     driver.get("https://go.ing.uc.cl/mis_reservas/")
     time.sleep(2)
     # Buscamos solo por la clase que identifica a las reservas
-    cajas_reservas = driver.find_elements(By.CLASS_NAME, "request-item")
     lista_reservas = []
+    for i in range(semanas_a_revisar):
+        print(f"revisando la {i+1} semana")
+        cajas_reservas = driver.find_elements(By.CLASS_NAME, "request-item")
+        for caja in cajas_reservas:
+            texto_completo = caja.text
+            if not texto_completo:
+                continue
 
-    for caja in cajas_reservas:
-        texto_completo = caja.text
-        if not texto_completo:
-            continue
-        
-        lineas_texto = texto_completo.split("\n")
-        fecha = None
-        hora = None
-        for linea in lineas_texto:
-            if "calendar_today" in linea:
-                # Quitamos la palabra 'calendar_today' y los espacios
-                fecha = linea.replace("calendar_today", "").strip()
-            elif "schedule" in linea:
-                hora = linea.replace("schedule", "").strip()
-        botones = caja.find_elements(By.TAG_NAME, "button")
-        if len(botones) > 0:
-            boton_info = botones[0]
-            correo = boton_info.get_attribute("data-student-email")
-            nombre = boton_info.get_attribute("data-student-name")
-            descripcion = boton_info.get_attribute("data-student-description")
-            curso = boton_info.get_attribute("data-course-name")
+            lineas_texto = texto_completo.split("\n")
+            fecha = None
+            hora = None
+            for linea in lineas_texto:
+                if "calendar_today" in linea:
+                    # Quitamos la palabra 'calendar_today' y los espacios
+                    fecha = linea.replace("calendar_today", "").strip()
+                elif "schedule" in linea:
+                    hora = linea.replace("schedule", "").strip()
+            botones = caja.find_elements(By.TAG_NAME, "button")
+            if len(botones) > 0:
+                boton_info = botones[0]
+                correo = boton_info.get_attribute("data-student-email")
+                nombre = boton_info.get_attribute("data-student-name")
+                descripcion = boton_info.get_attribute("data-student-description")
+                curso = boton_info.get_attribute("data-course-name")
 
-            reserva = {
-                "curso": curso,
-                "nombre": nombre,
-                "correo": correo,
-                "descripcion": descripcion,
-                "fecha": fecha,
-                "hora": hora
-            }
-            lista_reservas.append(reserva)
+                reserva = {
+                    "curso": curso,
+                    "nombre": nombre,
+                    "correo": correo,
+                    "descripcion": descripcion,
+                    "fecha": fecha,
+                    "hora": hora
+                }
+                lista_reservas.append(reserva)
+        if i < semanas_a_revisar - 1:
+            try:
+                boton_siguiente = driver.find_element(By.XPATH, '//*[@id="nextWeekBtn"]')
+                boton_siguiente.click()
+                time.sleep(3) # Pausa crucial para que la web cargue las tarjetas nuevas
+            except Exception:
+                print("No hay más semanas disponibles o falló el botón siguiente.")
+                break  # Rompe el ciclo for y termina de buscar
     return (lista_reservas)
