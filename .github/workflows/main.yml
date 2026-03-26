@@ -1,0 +1,41 @@
+name: Bot Revisor de Reservas
+
+on:
+  schedule:
+    # Esto se ejecuta cada 1 hora. (Es hora UTC, pero para intervalos no importa).
+    - cron: '0 * * * *'
+  workflow_dispatch: # Esto agrega un botón para que puedas correrlo manualmente cuando quieras
+
+permissions:
+  contents: write # Permiso vital para que el bot pueda guardar su memoria (.txt)
+
+jobs:
+  revisar_reservas:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Clonar el código
+      uses: actions/checkout@v4
+
+    - name: 🐍 Instalar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: 📦 Instalar dependencias
+      run: pip install -r requirements.txt
+
+    - name: 🚀 Ejecutar el bot
+      env:
+        USUARIO_UC: ${{ secrets.USUARIO_UC }}
+        CLAVE_UC: ${{ secrets.CLAVE_UC }}
+        CLAVE_GMAIL: ${{ secrets.CLAVE_GMAIL }}
+      run: python main.py
+
+    - name: 💾 Guardar memoria del bot (historial)
+      run: |
+        git config --global user.name "Bot Reservas"
+        git config --global user.email "bot@github-actions.com"
+        git add historial_vistas.txt
+        git commit -m "🤖 Memoria actualizada automáticamente" || echo "No hay reservas nuevas para guardar"
+        git push
